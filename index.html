@@ -376,6 +376,9 @@
                 <button class="secondary" id="saveBtn">Save</button>
                 <button class="danger" id="clearBtn">Clear</button>
             </div>
+            <div id="storageStatus" class="small" role="status" aria-live="polite">
+                Checking browser storage…
+            </div>
         </nav>
 
         <main>
@@ -735,6 +738,11 @@
                 <textarea id="f_stuck"></textarea>
 
                 <h3>Outputs</h3>
+<div class="success">
+<strong>Submission fix:</strong> the Workbook Output Card now includes your preserved Map A,
+group comparison, LEARN/RETURN work, Practice Test, Transfer, and Unit 2 close.
+If your browser blocks storage, you can still generate, copy, and download the complete card before leaving the page.
+</div>
                 <div id="validation" class="warning" hidden></div>
                 <div class="buttons">
                     <button id="journalBtn">Generate Workbook Output Card</button>
@@ -756,50 +764,514 @@
 
     <footer>CH6-QUICK-1 · Chapter 6 Structured Inquiry pilot · local-only · preserve first map + test transfer</footer>
 
-    <script>
-    (()=>{'use strict';
-    const KEY='ebb_ch6_quick1_v1',SNAP='ebb_ch6_quick1_mapA',XSNAP='ebb_ch6_quick1_transfer';
-    const fields=[...document.querySelectorAll('textarea,select,input[type=checkbox]')],required=[...document.querySelectorAll('[data-required="true"]')],A=['a_problem','a_judgment','a_trigger','a_protect','a_ceiling'];
-    const el=id=>document.getElementById(id),val=id=>{const e=el(id);return !e?'':e.type==='checkbox'?(e.checked?'Yes':'No'):(e.value||'').trim()},filled=e=>e.type==='checkbox'?e.checked:(e.value||'').trim().length>0;
-    function collect(){const d={};fields.forEach(e=>d[e.id]=e.type==='checkbox'?e.checked:e.value);d.savedAt=new Date().toISOString();return d}
-    function save(){try{localStorage.setItem(KEY,JSON.stringify(collect()))}catch(e){}}
-    function progress(){const done=required.filter(filled).length;el('barFill').style.width=(required.length?Math.round(100*done/required.length):0)+'%';el('progressText').textContent=`${done} of ${required.length} required responses completed.`}
-    function mapAText(s){return `MAP A — sealed ${s.sealedAt}
-    Main problem: ${s.a_problem}
-    First description: ${s.a_judgment}
-    Trigger noticed: ${s.a_trigger}
-    What Sam may protect/avoid: ${s.a_protect}
-    Claim ceiling: ${s.a_ceiling}`}
-    function loadMapA(){try{const s=JSON.parse(localStorage.getItem(SNAP)||'null');if(!s)return;A.forEach(id=>el(id).disabled=true);['snapshotA','returnSnapshot'].forEach(id=>{el(id).textContent=mapAText(s);el(id).hidden=false});el('sealedMsg').hidden=false;el('sealedMsg').textContent='Map A sealed. Later reasoning belongs in RETURN, not in the earlier map.'}catch(e){}}
-    function transferText(s){return `TRANSFER FIRST PASS — captured ${s.capturedAt}
-    ${s.x_analysis}`}
-    function loadTransfer(){try{const s=JSON.parse(localStorage.getItem(XSNAP)||'null');if(!s)return;el('x_analysis').disabled=true;el('transferSnapshot').textContent=transferText(s);el('transferSnapshot').hidden=false;el('transferCapturedMsg').hidden=false;el('transferCapturedMsg').textContent='First pass captured. Open the self-check and identify which moves appeared without prompting.';el('transferCheck').hidden=false}catch(e){}}
-    function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');fields.forEach(e=>{if(!(e.id in d))return;e.type==='checkbox'?e.checked=!!d[e.id]:e.value=d[e.id]})}catch(e){}loadMapA();loadTransfer();progress()}
-    fields.forEach(e=>{e.addEventListener('input',()=>{save();progress()});e.addEventListener('change',()=>{save();progress()})});
-    el('saveBtn').onclick=()=>{save();alert('Saved in this browser.')};
-    el('clearBtn').onclick=()=>{if(confirm('Clear all CH6-QUICK-1 responses and snapshots?')){localStorage.removeItem(KEY);localStorage.removeItem(SNAP);localStorage.removeItem(XSNAP);location.reload()}};
-    el('sealBtn').onclick=()=>{if(A.some(id=>!val(id))){alert('Complete all First Map fields before sealing.');return}if(!confirm('Seal Map A?'))return;const s={sealedAt:new Date().toLocaleString()};A.forEach(id=>s[id]=val(id));localStorage.setItem(SNAP,JSON.stringify(s));save();loadMapA()};
-    el('unsealBtn').onclick=()=>{if(!confirm('Erase sealed Map A for a technical correction?'))return;localStorage.removeItem(SNAP);A.forEach(id=>el(id).disabled=false);el('snapshotA').hidden=true;el('sealedMsg').hidden=true;el('returnSnapshot').textContent='Seal Map A in Step 2 to display it here.'};
-    el('captureTransferBtn').onclick=()=>{if(!val('x_analysis')){alert('Write your first-pass transfer analysis first.');return}if(!confirm('Capture this first pass before the self-check?'))return;localStorage.setItem(XSNAP,JSON.stringify({capturedAt:new Date().toLocaleString(),x_analysis:val('x_analysis')}));save();loadTransfer()};
-    el('resetTransferBtn').onclick=()=>{if(!confirm('Reset captured transfer first pass?'))return;localStorage.removeItem(XSNAP);el('x_analysis').disabled=false;el('transferSnapshot').hidden=true;el('transferCapturedMsg').hidden=true;el('transferCheck').hidden=true};
-    function section(title,pairs){let x=`
-    ${title}
-    ${'='.repeat(title.length)}
-    `;pairs.forEach(p=>x+=`${p[0]}
-    ${p[1]||'[not completed]'}
+    
+<script>
+(() => {
+'use strict';
 
-    `);return x}
-    function toolsUsed(){const ids=[['x_trigger','Trigger'],['x_route','Repeated route'],['x_train','What route trains'],['x_concern','Ethical concern'],['x_support','Conditions/supports'],['x_repair','Practice repair']];const u=ids.filter(([id])=>el(id).checked).map(([,n])=>n);return u.length?u.join('; '):'[none selected]'}
-    function journalCard(){let o='CHAPTER 6 WORKBOOK OUTPUT CARD — PRACTICE THE CHARACTER
-    ';o+=section('PRACTICE TEST',[['1. Repeated action',val('p_action')],['2. Habit route',val('p_route')],['3. What the habit trains',val('p_trains')],['4. Ethical concern',val('p_concern')],['5. Practical wisdom',val('p_wisdom')],['6. Conditions/supports',val('p_supports')],['7. Practice repair',val('p_repair')],['What I still cannot conclude',val('p_ceiling')],['What would make me REOPEN',val('p_reopen')]]);o+=section('TRANSFER — NOOR',[['First-pass analysis',val('x_analysis')],['Moves used without prompting',toolsUsed()],['Still need to know',val('x_limit')]]);o+=section('UNIT 2 CLOSE',[['Shared structural idea across scales',val('m_same')],['Comparison limit',val('m_mistake')],['Preserving agency',val('u2_synthesis')]]);return o}
-    function receipt(){let a=null,x=null;try{a=JSON.parse(localStorage.getItem(SNAP)||'null')}catch(e){}try{x=JSON.parse(localStorage.getItem(XSNAP)||'null')}catch(e){}let o='CH6-QUICK-1 PILOT PROCESS RECEIPT
-    ';o+=section('A. PRESERVED MAP A',[['Snapshot',a?mapAText(a):'[not sealed]']]);o+=section('B. GROUP',[['Shared',val('g_shared')],['Different',val('g_diff')],['Missing context',val('g_context')],['Claim ceiling',val('g_ceiling')]]);o+=section('C. LEARN + RETURN',[['Tool adding resolution',val('learn_note')],['Trigger',val('b_trigger')],['Response',val('b_response')],['Easier',val('b_easier')],['Harder',val('b_harder')],['Goods/capacities',val('b_goods')],['Still unknown',val('b_limit')],['What changed',val('b_change')]]);o+=section('D. PRACTICE TEST',[['Repeated action',val('p_action')],['Habit route',val('p_route')],['What it trains',val('p_trains')],['Ethical concern',val('p_concern')],['Practical wisdom',val('p_wisdom')],['Supports',val('p_supports')],['Repair',val('p_repair')],['Ceiling',val('p_ceiling')],['REOPEN',val('p_reopen')]]);o+=section('E. TRANSFER',[['Captured first pass',x?transferText(x):val('x_analysis')],['Moves identified afterward',toolsUsed()],['Only noticed after self-check',val('x_missing')],['Still need to know',val('x_limit')]]);o+=section('F. UNIT 2 + TRACE',[['Across-scale structure',val('m_same')],['Comparison limit',val('m_mistake')],['Unit 2 synthesis',val('u2_synthesis')],['Map relation',val('trace_relation')],['Specific change',val('trace_specific')]]);o+=section('G. OPTIONAL FEEDBACK',[['Map A',val('f_return')],['Group',val('f_group')],['Tools',val('f_tools')],['Transfer',val('f_transfer')],['Where process got in the way',val('f_stuck')]]);return o}
-    function validate(){const m=required.filter(e=>!filled(e));el('validation').hidden=!m.length;if(m.length)el('validation').textContent=`Complete ${m.length} required response(s) before treating the workbook as complete. You can still generate a draft.`;return !m.length}
-    function copy(id){const o=el(id);if(!o.value)return;if(navigator.clipboard?.writeText)navigator.clipboard.writeText(o.value).then(()=>alert('Copied.')).catch(()=>{o.select();document.execCommand('copy')});else{o.select();document.execCommand('copy')}}
-    function dl(name,text){const b=new Blob([text],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u)}
-    el('journalBtn').onclick=()=>{validate();el('journalOutput').value=journalCard();save()};el('traceBtn').onclick=()=>{el('traceOutput').value=receipt();save()};el('copyJournalBtn').onclick=()=>{if(!el('journalOutput').value)el('journalOutput').value=journalCard();copy('journalOutput')};el('copyTraceBtn').onclick=()=>{if(!el('traceOutput').value)el('traceOutput').value=receipt();copy('traceOutput')};el('downloadJournalBtn').onclick=()=>dl('chapter6_workbook_output_card.txt',el('journalOutput').value||journalCard());el('downloadTraceBtn').onclick=()=>dl('ch6_quick1_pilot_process_receipt.txt',el('traceOutput').value||receipt());
-    load();
-    })();
-    </script>
+const KEY='ebb_ch6_quick1_v2';
+const SNAP='ebb_ch6_quick1_mapA_v2';
+const XSNAP='ebb_ch6_quick1_transfer_v2';
+
+const fields=[...document.querySelectorAll('textarea,select,input[type=checkbox]')];
+const required=[...document.querySelectorAll('[data-required="true"]')];
+const A=['a_problem','a_judgment','a_trigger','a_protect','a_ceiling'];
+
+const el=id=>document.getElementById(id);
+const val=id=>{
+    const e=el(id);
+    return !e ? '' : e.type==='checkbox' ? (e.checked ? 'Yes' : 'No') : (e.value||'').trim();
+};
+const filled=e=>e.type==='checkbox' ? e.checked : (e.value||'').trim().length>0;
+
+/* ---------- resilient storage layer ----------
+   Try localStorage, then sessionStorage, then in-memory.
+   In-memory mode still lets the student finish, generate, copy, and download,
+   but cannot survive a reload/closed tab.
+*/
+const memoryStore = new Map();
+
+function storageAvailable(kind){
+    try{
+        const store=window[kind];
+        const test='__ect_storage_test__';
+        store.setItem(test,'1');
+        store.removeItem(test);
+        return true;
+    }catch(e){
+        return false;
+    }
+}
+
+const HAS_LOCAL = storageAvailable('localStorage');
+const HAS_SESSION = storageAvailable('sessionStorage');
+
+function setStored(key,value){
+    const text=typeof value==='string' ? value : JSON.stringify(value);
+    if(HAS_LOCAL){
+        try{ localStorage.setItem(key,text); return 'local'; }catch(e){}
+    }
+    if(HAS_SESSION){
+        try{ sessionStorage.setItem(key,text); return 'session'; }catch(e){}
+    }
+    memoryStore.set(key,text);
+    return 'memory';
+}
+
+function getStored(key){
+    if(HAS_LOCAL){
+        try{
+            const v=localStorage.getItem(key);
+            if(v!==null) return v;
+        }catch(e){}
+    }
+    if(HAS_SESSION){
+        try{
+            const v=sessionStorage.getItem(key);
+            if(v!==null) return v;
+        }catch(e){}
+    }
+    return memoryStore.has(key) ? memoryStore.get(key) : null;
+}
+
+function removeStored(key){
+    if(HAS_LOCAL){ try{ localStorage.removeItem(key); }catch(e){} }
+    if(HAS_SESSION){ try{ sessionStorage.removeItem(key); }catch(e){} }
+    memoryStore.delete(key);
+}
+
+function storageMode(){
+    if(HAS_LOCAL) return 'persistent';
+    if(HAS_SESSION) return 'tab-session';
+    return 'memory-only';
+}
+
+function updateStorageStatus(extra=''){
+    const s=el('storageStatus');
+    if(!s) return;
+    const mode=storageMode();
+    if(mode==='persistent'){
+        s.textContent='Saving is available in this browser.' + (extra ? ' ' + extra : '');
+    }else if(mode==='tab-session'){
+        s.textContent='Browser privacy settings block persistent storage. Work is being kept for this tab only. Download or copy your submission before closing the tab.' + (extra ? ' ' + extra : '');
+    }else{
+        s.textContent='Browser storage is blocked. Your work can still be completed and submitted, but it will not survive a reload. Download or copy your submission before leaving this page.' + (extra ? ' ' + extra : '');
+    }
+}
+
+function collect(){
+    const d={};
+    fields.forEach(e=>d[e.id]=e.type==='checkbox' ? e.checked : e.value);
+    d.savedAt=new Date().toISOString();
+    return d;
+}
+
+function save(){
+    const mode=setStored(KEY,collect());
+    updateStorageStatus(mode==='local' ? 'Saved.' : mode==='session' ? 'Saved for this tab.' : 'Kept in this open page.');
+    return mode;
+}
+
+function progress(){
+    const done=required.filter(filled).length;
+    el('barFill').style.width=(required.length ? Math.round(100*done/required.length) : 0)+'%';
+    el('progressText').textContent=`${done} of ${required.length} required responses completed.`;
+}
+
+function parseStored(key){
+    try{
+        const raw=getStored(key);
+        return raw ? JSON.parse(raw) : null;
+    }catch(e){
+        return null;
+    }
+}
+
+function mapAText(s){
+    if(!s) return '[Map A not yet sealed]';
+    return `MAP A — sealed ${s.sealedAt || '[this session]'}
+Main problem: ${s.a_problem || ''}
+First description: ${s.a_judgment || ''}
+Trigger noticed: ${s.a_trigger || ''}
+What Sam may protect/avoid: ${s.a_protect || ''}
+Claim ceiling: ${s.a_ceiling || ''}`;
+}
+
+function currentMapAObject(){
+    const s={sealedAt:'[current unsealed map]'};
+    A.forEach(id=>s[id]=val(id));
+    return s;
+}
+
+function getMapA(){
+    return parseStored(SNAP) || currentMapAObject();
+}
+
+function loadMapA(){
+    const s=parseStored(SNAP);
+    if(!s) return;
+    A.forEach(id=>el(id).disabled=true);
+    ['snapshotA','returnSnapshot'].forEach(id=>{
+        el(id).textContent=mapAText(s);
+        el(id).hidden=false;
+    });
+    el('sealedMsg').hidden=false;
+    el('sealedMsg').textContent='Map A sealed. Later reasoning belongs in RETURN, not in the earlier map.';
+}
+
+function transferText(s){
+    return `TRANSFER FIRST PASS — captured ${s?.capturedAt || '[this session]'}
+${s?.x_analysis || val('x_analysis')}`;
+}
+
+function getTransfer(){
+    return parseStored(XSNAP) || {capturedAt:'[current first pass]',x_analysis:val('x_analysis')};
+}
+
+function loadTransfer(){
+    const s=parseStored(XSNAP);
+    if(!s) return;
+    el('x_analysis').disabled=true;
+    el('transferSnapshot').textContent=transferText(s);
+    el('transferSnapshot').hidden=false;
+    el('transferCapturedMsg').hidden=false;
+    el('transferCapturedMsg').textContent='First pass captured. Open the self-check and identify which moves appeared without prompting.';
+    el('transferCheck').hidden=false;
+}
+
+function load(){
+    try{
+        const raw=getStored(KEY);
+        const d=raw ? JSON.parse(raw) : {};
+        fields.forEach(e=>{
+            if(!(e.id in d)) return;
+            e.type==='checkbox' ? e.checked=!!d[e.id] : e.value=d[e.id];
+        });
+    }catch(e){}
+    loadMapA();
+    loadTransfer();
+    progress();
+    updateStorageStatus();
+}
+
+fields.forEach(e=>{
+    e.addEventListener('input',()=>{ save(); progress(); });
+    e.addEventListener('change',()=>{ save(); progress(); });
+});
+
+el('saveBtn').onclick=()=>{
+    const mode=save();
+    if(mode==='local'){
+        alert('Saved in this browser.');
+    }else if(mode==='session'){
+        alert('Saved for this tab. Because persistent browser storage is blocked, download or copy your submission before closing the tab.');
+    }else{
+        alert('Browser storage is blocked. Your work is still available on this open page, but it will not survive a reload. Download or copy your submission before leaving.');
+    }
+};
+
+el('clearBtn').onclick=()=>{
+    if(confirm('Clear all CH6-QUICK-1 responses and snapshots?')){
+        removeStored(KEY);
+        removeStored(SNAP);
+        removeStored(XSNAP);
+        location.reload();
+    }
+};
+
+el('sealBtn').onclick=()=>{
+    if(A.some(id=>!val(id))){
+        alert('Complete all First Map fields before sealing.');
+        return;
+    }
+    if(!confirm('Seal Map A?')) return;
+
+    const s={sealedAt:new Date().toLocaleString()};
+    A.forEach(id=>s[id]=val(id));
+
+    const mode=setStored(SNAP,s);
+
+    // The seal works even if browser persistence is blocked.
+    A.forEach(id=>el(id).disabled=true);
+    ['snapshotA','returnSnapshot'].forEach(id=>{
+        el(id).textContent=mapAText(s);
+        el(id).hidden=false;
+    });
+    el('sealedMsg').hidden=false;
+    el('sealedMsg').textContent='Map A sealed. Later reasoning belongs in RETURN, not in the earlier map.';
+    save();
+
+    if(mode==='memory'){
+        alert('Map A is sealed for this open page, but this browser is blocking storage. Download or copy your final card before leaving or reloading.');
+    }
+};
+
+el('unsealBtn').onclick=()=>{
+    if(!confirm('Erase sealed Map A for a technical correction?')) return;
+    removeStored(SNAP);
+    A.forEach(id=>el(id).disabled=false);
+    el('snapshotA').hidden=true;
+    el('sealedMsg').hidden=true;
+    el('returnSnapshot').textContent='Seal Map A in Step 2 to display it here.';
+};
+
+el('captureTransferBtn').onclick=()=>{
+    if(!val('x_analysis')){
+        alert('Write your first-pass transfer analysis first.');
+        return;
+    }
+    if(!confirm('Capture this first pass before the self-check?')) return;
+
+    const s={capturedAt:new Date().toLocaleString(),x_analysis:val('x_analysis')};
+    setStored(XSNAP,s);
+
+    el('x_analysis').disabled=true;
+    el('transferSnapshot').textContent=transferText(s);
+    el('transferSnapshot').hidden=false;
+    el('transferCapturedMsg').hidden=false;
+    el('transferCapturedMsg').textContent='First pass captured. Open the self-check and identify which moves appeared without prompting.';
+    el('transferCheck').hidden=false;
+    save();
+};
+
+el('resetTransferBtn').onclick=()=>{
+    if(!confirm('Reset captured transfer first pass?')) return;
+    removeStored(XSNAP);
+    el('x_analysis').disabled=false;
+    el('transferSnapshot').hidden=true;
+    el('transferCapturedMsg').hidden=true;
+    el('transferCheck').hidden=true;
+};
+
+function section(title,pairs){
+    let x=`
+${title}
+${'='.repeat(title.length)}
+`;
+    pairs.forEach(p=>x+=`${p[0]}
+${p[1]||'[not completed]'}
+
+`);
+    return x;
+}
+
+function toolsUsed(){
+    const ids=[
+        ['x_trigger','Trigger'],
+        ['x_route','Repeated route'],
+        ['x_train','What route trains'],
+        ['x_concern','Ethical concern'],
+        ['x_support','Conditions/supports'],
+        ['x_repair','Practice repair']
+    ];
+    const u=ids.filter(([id])=>el(id).checked).map(([,n])=>n);
+    return u.length ? u.join('; ') : '[none selected]';
+}
+
+/* FIXED:
+   The submission card now includes Map A, group comparison,
+   LEARN/RETURN, Practice Test, Transfer, and Unit 2 close.
+   Students no longer lose their First Map and core work when
+   they generate the card they submit.
+*/
+function journalCard(){
+    const a=getMapA();
+    const x=getTransfer();
+    let o='CHAPTER 6 WORKBOOK OUTPUT CARD — PRACTICE THE CHARACTER\\n';
+
+    o+=section('A. PRESERVED MAP A',[
+        ['Snapshot',mapAText(a)]
+    ]);
+
+    o+=section('B. COMPARE — DIFFERENCE HARVEST',[
+        ['Shared across first maps',val('g_shared')],
+        ['Important difference',val('g_diff')],
+        ['Missing condition/context',val('g_context')],
+        ['Group claim ceiling',val('g_ceiling')]
+    ]);
+
+    o+=section('C. LEARN + RETURN — MAP B',[
+        ['Tool adding the most resolution',val('learn_note')],
+        ['What appears / trigger',val('b_trigger')],
+        ['Response',val('b_response')],
+        ['What may become easier',val('b_easier')],
+        ['What may become harder',val('b_harder')],
+        ['Goods / relationships / capacities affected',val('b_goods')],
+        ['What I still do not know about Sam',val('b_limit')],
+        ['What changed in my map',val('b_change')]
+    ]);
+
+    o+=section('D. PRACTICE TEST',[
+        ['1. Repeated action',val('p_action')],
+        ['2. Habit route',val('p_route')],
+        ['3. What the habit trains',val('p_trains')],
+        ['4. Ethical concern',val('p_concern')],
+        ['5. Practical wisdom',val('p_wisdom')],
+        ['6. Conditions/supports',val('p_supports')],
+        ['7. Practice repair',val('p_repair')],
+        ['What I still cannot conclude',val('p_ceiling')],
+        ['What would make me REOPEN',val('p_reopen')]
+    ]);
+
+    o+=section('E. TRANSFER — NOOR',[
+        ['Captured first-pass analysis',x ? transferText(x) : val('x_analysis')],
+        ['Moves used without prompting',toolsUsed()],
+        ['Only noticed after self-check',val('x_missing')],
+        ['Still need to know',val('x_limit')]
+    ]);
+
+    o+=section('F. UNIT 2 CLOSE',[
+        ['Shared structural idea across scales',val('m_same')],
+        ['Comparison limit',val('m_mistake')],
+        ['Preserving agency',val('u2_synthesis')],
+        ['Relation between first and later maps',val('trace_relation')],
+        ['Specific change / newly visible feature',val('trace_specific')]
+    ]);
+
+    return o;
+}
+
+/* Keep the full pilot receipt as an instructor/research artifact. */
+function receipt(){
+    const a=getMapA();
+    const x=getTransfer();
+    let o='CH6-QUICK-1 PILOT PROCESS RECEIPT\\n';
+
+    o+=section('A. PRESERVED MAP A',[
+        ['Snapshot',mapAText(a)]
+    ]);
+
+    o+=section('B. GROUP',[
+        ['Shared',val('g_shared')],
+        ['Different',val('g_diff')],
+        ['Missing context',val('g_context')],
+        ['Claim ceiling',val('g_ceiling')]
+    ]);
+
+    o+=section('C. LEARN + RETURN',[
+        ['Tool adding resolution',val('learn_note')],
+        ['Trigger',val('b_trigger')],
+        ['Response',val('b_response')],
+        ['Easier',val('b_easier')],
+        ['Harder',val('b_harder')],
+        ['Goods/capacities',val('b_goods')],
+        ['Still unknown',val('b_limit')],
+        ['What changed',val('b_change')]
+    ]);
+
+    o+=section('D. PRACTICE TEST',[
+        ['Repeated action',val('p_action')],
+        ['Habit route',val('p_route')],
+        ['What it trains',val('p_trains')],
+        ['Ethical concern',val('p_concern')],
+        ['Practical wisdom',val('p_wisdom')],
+        ['Supports',val('p_supports')],
+        ['Repair',val('p_repair')],
+        ['Ceiling',val('p_ceiling')],
+        ['REOPEN',val('p_reopen')]
+    ]);
+
+    o+=section('E. TRANSFER',[
+        ['Captured first pass',x ? transferText(x) : val('x_analysis')],
+        ['Moves identified afterward',toolsUsed()],
+        ['Only noticed after self-check',val('x_missing')],
+        ['Still need to know',val('x_limit')]
+    ]);
+
+    o+=section('F. UNIT 2 + TRACE',[
+        ['Across-scale structure',val('m_same')],
+        ['Comparison limit',val('m_mistake')],
+        ['Unit 2 synthesis',val('u2_synthesis')],
+        ['Map relation',val('trace_relation')],
+        ['Specific change',val('trace_specific')]
+    ]);
+
+    o+=section('G. OPTIONAL FEEDBACK',[
+        ['Map A',val('f_return')],
+        ['Group',val('f_group')],
+        ['Tools',val('f_tools')],
+        ['Transfer',val('f_transfer')],
+        ['Where process got in the way',val('f_stuck')]
+    ]);
+
+    return o;
+}
+
+function validate(){
+    const m=required.filter(e=>!filled(e));
+    el('validation').hidden=!m.length;
+    if(m.length){
+        el('validation').textContent=`Complete ${m.length} required response(s) before treating the workbook as complete. You can still generate a draft.`;
+    }
+    return !m.length;
+}
+
+function copy(id){
+    const o=el(id);
+    if(!o.value) return;
+    if(navigator.clipboard?.writeText){
+        navigator.clipboard.writeText(o.value)
+            .then(()=>alert('Copied.'))
+            .catch(()=>{
+                o.select();
+                document.execCommand('copy');
+                alert('Copied.');
+            });
+    }else{
+        o.select();
+        document.execCommand('copy');
+        alert('Copied.');
+    }
+}
+
+function dl(name,text){
+    const b=new Blob([text],{type:'text/plain;charset=utf-8'});
+    const u=URL.createObjectURL(b);
+    const a=document.createElement('a');
+    a.href=u;
+    a.download=name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(u);
+}
+
+el('journalBtn').onclick=()=>{
+    validate();
+    el('journalOutput').value=journalCard();
+    save();
+};
+
+el('traceBtn').onclick=()=>{
+    el('traceOutput').value=receipt();
+    save();
+};
+
+el('copyJournalBtn').onclick=()=>{
+    if(!el('journalOutput').value) el('journalOutput').value=journalCard();
+    copy('journalOutput');
+};
+
+el('copyTraceBtn').onclick=()=>{
+    if(!el('traceOutput').value) el('traceOutput').value=receipt();
+    copy('traceOutput');
+};
+
+el('downloadJournalBtn').onclick=()=>{
+    const text=el('journalOutput').value || journalCard();
+    el('journalOutput').value=text;
+    dl('chapter6_complete_workbook_output_card.txt',text);
+};
+
+el('downloadTraceBtn').onclick=()=>{
+    const text=el('traceOutput').value || receipt();
+    el('traceOutput').value=text;
+    dl('ch6_quick1_pilot_process_receipt.txt',text);
+};
+
+load();
+})();
+</script>
+
 </body>
 </html>
